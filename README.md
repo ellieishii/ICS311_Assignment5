@@ -2,11 +2,11 @@
 
 # Branches: </br>
 
-# binh-task-1: 
+<h3> binh-task-1: </h3> 
 Ensuring that skilled leaders can share their knowledge across the sea of islands </br>
 
-# ralph-task-3: 
+<h3> ralph-task-3: </h3> 
 Ensuring Efficient Resource Distribution Across the Polynesian Triangle </br>
 
-# ellie-task-4: 
+<h3> ellie-task-4: </h3> 
 Ensuring Efficient Exploration of Unique Island Experiences </br>
