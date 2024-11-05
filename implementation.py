@@ -1,7 +1,6 @@
 import heapq
 
 class Graph:
-    #Task N Implementation (Author) ############################################################################################################
 
     # Task 3 Implementation (Ralph Ramos) ############################################################################################################
     def __init__(self):
@@ -76,4 +75,3 @@ print(f'Resources remaining After Distribution: {graph.resources}')
 print(f'Needs after distribution: {graph.needs}')
 print(f'Total resources distributed after distribution: {distributed_resources}')
 
-# Task N Example Usage (Author) ############################################################################################################
