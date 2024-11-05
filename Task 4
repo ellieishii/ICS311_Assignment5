@@ -1,0 +1,159 @@
+import heapq
+from collections import defaultdict, OrderedDict
+
+class Island:
+    def __init__(self, name):
+        # Initialize an island with a name and empty collections for experiences and connections
+        self.name = name
+        self.experiences = OrderedDict()  # Using OrderedDict to maintain insertion order
+        self.connections = {}
+
+    def add_experience(self, experience_name, duration):
+        # Add an experience and its duration to the island
+        self.experiences[experience_name] = duration
+
+    def add_connection(self, destination, travel_time):
+        # Add a connection to another island with travel time
+        self.connections[destination] = travel_time
+
+    def total_experience_time(self):
+        # Calculate total time needed for all experiences on this island
+        return sum(self.experiences.values())
+
+class TourismOptimizer:
+    def __init__(self):
+        self.islands = {}
+        
+    def add_island(self, island_name):
+        if island_name not in self.islands:
+            self.islands[island_name] = Island(island_name)
+        return self.islands[island_name]
+
+    def get_experiences_in_order(self, path):
+        # Get experiences in the order they would be encountered along the path
+        ordered_experiences = []
+        for island_name in path:
+            island = self.islands[island_name]
+            ordered_experiences.extend(island.experiences.keys())
+        return ordered_experiences
+
+    def optimize_experiences(self, start_island_name, time_limit=float('inf')):
+        if start_island_name not in self.islands:
+            return 0, [], [], 0
+
+        start_island = self.islands[start_island_name]
+        initial_time = start_island.total_experience_time()
+        
+        pq = [(
+            initial_time,
+            start_island_name,
+            list(start_island.experiences.keys()),  # To maintain order
+            [start_island_name],
+            {'travel': 0, 'experiences': initial_time}
+        )]
+        
+        best_solution = {
+            'num_experiences': len(start_island.experiences),
+            'experiences': list(start_island.experiences.keys()), 
+            'path': [start_island_name],
+            'total_time': initial_time,
+            'time_breakdown': {'travel': 0, 'experiences': initial_time}
+        }
+
+        shortest_times = defaultdict(lambda: float('inf'))
+        shortest_times[start_island_name] = initial_time
+
+        while pq:
+            total_time, current_island_name, current_experiences, current_path, time_breakdown = heapq.heappop(pq)
+            
+            if total_time > time_limit:
+                continue
+
+            current_island = self.islands[current_island_name]
+            
+            for next_island_name, travel_time in current_island.connections.items():
+                next_island = self.islands[next_island_name]
+                
+                new_travel_time = time_breakdown['travel'] + travel_time
+                new_experience_time = time_breakdown['experiences'] + next_island.total_experience_time()
+                new_total_time = new_travel_time + new_experience_time
+                
+                if new_total_time > time_limit:
+                    continue
+
+                new_experiences = current_experiences + list(next_island.experiences.keys())
+                
+                if (len(set(new_experiences)) > len(set(best_solution['experiences'])) or
+                    (len(set(new_experiences)) == len(set(best_solution['experiences'])) and 
+                     new_total_time < best_solution['total_time'])):
+                    best_solution.update({
+                        'num_experiences': len(set(new_experiences)),
+                        'experiences': new_experiences,
+                        'path': current_path + [next_island_name],
+                        'total_time': new_total_time,
+                        'time_breakdown': {
+                            'travel': new_travel_time,
+                            'experiences': new_experience_time
+                        }
+                    })
+
+                if new_total_time < shortest_times[next_island_name]:
+                    shortest_times[next_island_name] = new_total_time
+                    new_time_breakdown = {
+                        'travel': new_travel_time,
+                        'experiences': new_experience_time
+                    }
+                    heapq.heappush(pq, (
+                        new_total_time,
+                        next_island_name,
+                        new_experiences,
+                        current_path + [next_island_name],
+                        new_time_breakdown
+                    ))
+
+        return (
+            best_solution['num_experiences'],
+            best_solution['experiences'],
+            best_solution['path'],
+            best_solution['time_breakdown']
+        )
+
+# Example usage with ordered output
+def run_tourism_example():
+    optimizer = TourismOptimizer()
+    
+    # Create islands
+    island_a = optimizer.add_island("Island A")
+    island_b = optimizer.add_island("Island B")
+    island_c = optimizer.add_island("Island C")
+    
+    # Add experiences to islands with their durations
+    island_a.add_experience("Canoe Tour", 2)
+    island_a.add_experience("Snorkeling", 3)
+    island_b.add_experience("Hiking", 4)
+    island_c.add_experience("Scuba Diving", 5)
+    island_c.add_experience("Fishing", 2)
+    
+    # Add connections between islands with travel times
+    island_a.add_connection("Island B", 3)
+    island_b.add_connection("Island C", 4)
+    island_a.add_connection("Island C", 6)
+    
+    # Run optimization with time limit
+    time_limit = 20
+    num_experiences, experiences, path, time_breakdown = optimizer.optimize_experiences("Island A", time_limit=time_limit)
+    
+    print(f"\nOptimal Tourism Plan (Time Limit: {time_limit} units)")
+    print("-" * 50)
+    print(f"Number of unique experiences possible: {num_experiences}")
+    print("\nExperiences in order of visit:")
+    for i, exp in enumerate(experiences, 1):
+        print(f"{i}. {exp}")
+    print(f"\nPath taken: {' -> '.join(path)}")
+    print("\nTime Breakdown:")
+    print(f"Travel time: {time_breakdown['travel']} units")
+    print(f"Experience time: {time_breakdown['experiences']} units")
+    print(f"Total time: {time_breakdown['travel'] + time_breakdown['experiences']} units")
+
+# Run the example
+run_tourism_example()
